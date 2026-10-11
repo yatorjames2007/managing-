@@ -1,20 +1,39 @@
 from flask import Flask, render_template, request, jsonify
-import requests, urllib.parse
+from googletrans import Translator
+
 app = Flask(__name__)
+translator = Translator()
+
 @app.route('/')
 def home():
     return render_template('index.html')
+
 @app.route('/translate', methods=['POST'])
-def trans():
-    d=request.get_json()
-    txt=d.get('text','').strip()
-    to=d.get('to','sw').lower()
-    m={'kiswahili':'sw','german':'de','arabic':'ar','french':'fr','sw':'sw','de':'de','ar':'ar'}
-    to=m.get(to,'sw')
-    q=urllib.parse.quote(txt)
-    url=f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={to}&dt=t&q={q}"
-    r=requests.get(url,headers={'User-Agent':'Mozilla/5.0'}).json()
-    res=''.join([x[0] for x in r[0]])
-    return jsonify({'translated':res})
-if __name__=='__main__':
+def do_translate():
+    data = request.get_json()
+    text = data.get('text','').strip()
+    to_raw = data.get('to','sw').lower()
+
+    # convert German/Kiswahili/Arabic -> de/sw/ar
+    lang_map = {
+        'kiswahili':'sw', 'sw':'sw',
+        'arabic':'ar', 'ar':'ar',
+        'german':'de', 'de':'de', 'germen':'de',
+        'english':'en', 'en':'en',
+        'french':'fr', 'fr':'fr',
+        'spanish':'es', 'es':'es'
+    }
+    to_lang = lang_map.get(to_raw, 'sw')
+
+    if not text:
+        return jsonify({'translated':''})
+
+    try:
+        result = translator.translate(text, dest=to_lang)
+        return jsonify({'translated': result.text})
+    except Exception as e:
+        print("Translate error:", e)
+        return jsonify({'translated': text})
+
+if __name__ == '__main__':
     app.run()
