@@ -1,35 +1,47 @@
-from flask import Flask, render_template, request, jsonify
-import requests
-from urllib.parse import quote
-
-app = Flask(__name__)
-
-def translate_free(text, target_lang):
-    try:
-        # Fix Kiswahili -> sw
-        lang_map = {'kiswahili':'sw', 'swahili':'sw', 'english':'en', 'french':'fr', 'german':'de', 'spanish':'es', 'arabic':'ar'}
-        target_lang = lang_map.get(target_lang.lower(), target_lang.lower()[:2])
-
-        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl={target_lang}&dt=t&q={quote(text)}"
-        r = requests.get(url, timeout=10)
-        data = r.json()
-        return ''.join([s[0] for s in data[0] if s[0]])
-    except Exception as e:
-        print(e)
-        return "Error"
-
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route('/translate', methods=['POST'])
-def translate_api():
-    data = request.get_json()
-    text = data.get('text','')
-    lang = data.get('to','sw')
-
-    result = translate_free(text, lang)
-    return jsonify({'translated': result}) # Lazima iwe 'translated' sio 'translation'
-
-if __name__ == '__main__':
-    app.run()
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Managing Translator App</title>
+<style>
+body { background: #0f172a; display: flex; justify-content: center; padding: 20px; font-family: Arial; }
+.card { background: #1e293b; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; }
+h2 { color: white; }
+textarea, select { width: 100%; padding: 15px; border-radius: 12px; border: none; margin: 10px 0; font-size: 16px; box-sizing: border-box; }
+button { width: 100%; padding: 15px; background: #22c55e; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+#out { background: #0f172a; color: white; padding: 15px; border-radius: 12px; margin-top: 15px; min-height: 30px; }
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Managing Translator App</h2>
+<textarea id="t" rows="4">How are you</textarea>
+<select id="lang">
+<option value="sw">Kiswahili</option>
+<option value="en">English</option>
+<option value="fr">French</option>
+<option value="de">German</option>
+<option value="es">Spanish</option>
+<option value="ar">Arabic</option>
+</select>
+<button onclick="go()">Translate</button>
+<div id="out"></div>
+</div>
+<script>
+async function go(){
+  let text = document.getElementById('t').value;
+  let to = document.getElementById('lang').value;
+  let out = document.getElementById('out');
+  out.innerText = "Translating...";
+  let r = await fetch('/translate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({text: text, to: to})
+  });
+  let d = await r.json();
+  out.innerText = d.translated; // Hapa ndio ilikuwa inakosea
+}
+</script>
+</div>
+</body>
+</html>
