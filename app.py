@@ -1,8 +1,16 @@
 from flask import Flask, render_template, request, jsonify
-from deep_translator import MyMemoryTranslator
-import urllib.parse
+from deep_translator import GoogleTranslator
 
 app = Flask(__name__)
+
+def clean_lang(code):
+    if not code:
+        return 'en'
+    code = str(code).lower().strip()
+    if code == 'auto':
+        return 'auto'
+    # Chukua herufi 2 za kwanza tu: fr-BE -> fr, sw-TZ -> sw
+    return code.split('-')[0].split('_')[0][:2]
 
 @app.route('/')
 def home():
@@ -17,18 +25,17 @@ def translate():
     try:
         data = request.get_json()
         text = data.get('text','').strip()
+        to_lang = clean_lang(data.get('to','sw'))
+        from_lang = clean_lang(data.get('from','auto'))
+
         if not text:
-            return jsonify({'translated': ''})
-        # kama ni link kama https://...?q=hello, chukua q pekee
-        if 'q=' in text:
-            try:
-                parsed = urllib.parse.urlparse(text)
-                qs = urllib.parse.parse_qs(parsed.query)
-                if 'q' in qs:
-                    text = qs['q'][0]
-            except:
-                pass
-        result = MyMemoryTranslator(source='en-US', target='sw-TZ').translate(text)
+            return jsonify({'translated':''})
+
+        # Force auto detection kwa source
+        if from_lang == 'sw-tz' or from_lang == 'sw':
+            from_lang = 'auto'
+
+        result = GoogleTranslator(source='auto', target=to_lang).translate(text)
         return jsonify({'translated': result})
     except Exception as e:
         return jsonify({'translated': f"Error: {str(e)}"})
