@@ -1,43 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Managing Translator</title>
+<title>Managing Translator - All Languages</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{font-family:sans-serif;background:#0f172a;color:white;padding:20px}
-.box{max-width:500px;margin:auto;background:white;color:black;padding:20px;border-radius:10px}
-textarea{width:100%;height:120px;border-radius:8px;padding:10px}
-select,button{width:100%;padding:12px;margin-top:10px;border-radius:8px}
+.box{max-width:500px;margin:auto;background:white;color:black;padding:20px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+h2{text-align:center;color:#0f172a}
+textarea{width:100%;height:120px;border-radius:8px;padding:12px;border:1px solid #ccc;box-sizing:border-box;font-size:16px}
+select,button{width:100%;padding:14px;margin-top:12px;border-radius:8px;font-size:16px;box-sizing:border-box}
+select{border:1px solid #ccc}
 button{background:#22c55e;color:white;font-weight:bold;border:none;cursor:pointer}
-#out{background:#0f172a;color:white;padding:15px;border-radius:8px;margin-top:15px;min-height:50px}
+button:hover{background:#16a34a}
+#out{background:#0f172a;color:white;padding:15px;border-radius:8px;margin-top:15px;min-height:50px;white-space:pre-wrap;word-wrap:break-word}
 </style>
 </head>
 <body>
 <div class="box">
-<h2>Managing Translator App</h2>
-<textarea id="text" placeholder="Andika hapa..."></textarea>
+<h2>Welcome to Managing Translator</h2>
+<p style="text-align:center;color:#555;font-size:14px;margin-top:-10px">Translate to any language instantly</p>
+<textarea id="text" placeholder="Type text here..."></textarea>
 <select id="lang">
-<option value="sw">Kiswahili</option>
 <option value="en">English</option>
+<option value="sw">Swahili</option>
 <option value="fr">French</option>
 <option value="de">German</option>
 <option value="es">Spanish</option>
 <option value="ar">Arabic</option>
 <option value="zh">Chinese</option>
 <option value="hi">Hindi</option>
+<option value="it">Italian</option>
+<option value="pt">Portuguese</option>
 </select>
-<button onclick="translateText()">Translate</button>
-<div id="out">Matokeo hapa...</div>
+<button onclick="translateText()">Translate Now</button>
+<div id="out">Welcome! Your translation will appear here...</div>
 </div>
 <script>
 async function translateText(){
 let t=document.getElementById('text').value;
 let l=document.getElementById('lang').value;
-if(!t){alert('Andika kitu!');return;}
-document.getElementById('out').innerText='Translating...';
+if(!t){alert('Please type something to translate!');return;}
+document.getElementById('out').innerText='Translating, please wait...';
+try{
 let r=await fetch('/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,to:l,from:'auto'})});
 let d=await r.json();
 document.getElementById('out').innerText=d.translated;
+}catch(e){
+document.getElementById('out').innerText='Error: Please try again in 1 minute';
+}
 }
 </script>
 </body>
