@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Managing Translator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:sans-serif;background:#0f172a;color:white;padding:20px}
+.box{max-width:500px;margin:auto;background:#1e293b;padding:20px;border-radius:15px}
+textarea{width:100%;height:120px;border-radius:10px;padding:10px}
+select,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
+button{background:#22c55e;color:white;font-weight:bold;font-size:16px}
+#out{background:#0f172a;padding:15px;border-radius:10px;margin-top:15px;min-height:50px}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>Managing Translator App</h2>
+<textarea id="text" placeholder="Andika hapa..."></textarea>
+<select id="lang">
+<option value="sw">Kiswahili</option>
+<option value="en">English</option>
+<option value="fr">French</option>
+<option value="de">German</option>
+<option value="es">Spanish</option>
+<option value="ar">Arabic</option>
+<option value="zh">Chinese</option>
+</select>
+<button onclick="translateText()">Translate</button>
+<div id="out">Matokeo hapa...</div>
+</div>
+<script>
+async function translateText(){
+let t=document.getElementById('text').value;
+let l=document.getElementById('lang').value;
+document.getElementById('out').innerText='Translating...';
+let r=await fetch('/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,lang:l})});
+let d=await r.json();
+document.getElementById('out').innerText=d.translated||d.error;
+}
+</script>
+</body>
+</html>
