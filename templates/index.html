@@ -1,47 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Managing Translator App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Judith Translator App</title>
 <style>
-body { background: #0f172a; display: flex; justify-content: center; padding: 20px; font-family: Arial; }
-.card { background: #1e293b; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; }
-h2 { color: white; }
-textarea, select { width: 100%; padding: 15px; border-radius: 12px; border: none; margin: 10px 0; font-size: 16px; box-sizing: border-box; }
-button { width: 100%; padding: 15px; background: #22c55e; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
-#out { background: #0f172a; color: white; padding: 15px; border-radius: 12px; margin-top: 15px; min-height: 30px; }
+body{background:#0f172a;color:white;font-family:Arial;display:flex;justify-content:center;padding:20px}
+.card{background:#1e293b;padding:20px;border-radius:15px;width:100%;max-width:400px}
+textarea,select{width:100%;padding:12px;margin:10px 0;border-radius:10px;border:none;box-sizing:border-box}
+button{width:100%;padding:14px;background:#22c55e;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+.result{background:#0f172a;padding:12px;border-radius:10px;margin-top:10px;min-height:20px}
 </style>
 </head>
 <body>
 <div class="card">
-<h2>Managing Translator App</h2>
-<textarea id="t" rows="4">How are you</textarea>
+<h2>Judith Translator App</h2>
+<textarea id="text" rows="4" placeholder="Andika hapa...">How are you</textarea>
 <select id="lang">
 <option value="sw">Kiswahili</option>
-<option value="en">English</option>
-<option value="fr">French</option>
-<option value="de">German</option>
-<option value="es">Spanish</option>
 <option value="ar">Arabic</option>
+<option value="de">German</option>
+<option value="fr">French</option>
+<option value="en">English</option>
 </select>
-<button onclick="go()">Translate</button>
-<div id="out"></div>
+<button onclick="doTrans()">Translate</button>
+<div class="result" id="result">Matokeo yataonekana hapa</div>
 </div>
 <script>
-async function go(){
-  let text = document.getElementById('t').value;
-  let to = document.getElementById('lang').value;
-  let out = document.getElementById('out');
-  out.innerText = "Translating...";
-  let r = await fetch('/translate',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({text: text, to: to})
-  });
-  let d = await r.json();
-  out.innerText = d.translated; // Hapa ndio ilikuwa inakosea
+async function doTrans(){
+ let txt=document.getElementById('text').value;
+ let to=document.getElementById('lang').value;
+ let resDiv=document.getElementById('result');
+ resDiv.innerText='Translating...';
+ try{
+   let r=await fetch('/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,to:to})});
+   let j=await r.json();
+   resDiv.innerText=j.translated || 'Error: empty';
+ }catch(e){
+   resDiv.innerText='Error: '+e.message+' - Angalia Render Logs';
+ }
 }
 </script>
-</div>
 </body>
 </html>
