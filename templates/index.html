@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Judith Translator App</title>
+<title>Managing Translator App</title>
 <style>
 body{background:#0f172a;color:white;font-family:Arial;display:flex;justify-content:center;padding:20px}
 .card{background:#1e293b;padding:20px;border-radius:15px;width:100%;max-width:400px}
@@ -14,7 +14,7 @@ button{width:100%;padding:14px;background:#22c55e;color:white;border:none;border
 </head>
 <body>
 <div class="card">
-<h2>Judith Translator App</h2>
+<h2>Managing Translator App</h2>
 <textarea id="text" rows="4" placeholder="Andika hapa...">How are you</textarea>
 <select id="lang">
 <option value="sw">Kiswahili</option>
@@ -30,15 +30,13 @@ button{width:100%;padding:14px;background:#22c55e;color:white;border:none;border
 async function doTrans(){
  let txt=document.getElementById('text').value;
  let to=document.getElementById('lang').value;
- let resDiv=document.getElementById('result');
- resDiv.innerText='Translating...';
+ let res=document.getElementById('result');
+ res.innerText='Translating...';
  try{
    let r=await fetch('/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,to:to})});
    let j=await r.json();
-   resDiv.innerText=j.translated || 'Error: empty';
- }catch(e){
-   resDiv.innerText='Error: '+e.message+' - Angalia Render Logs';
- }
+   res.innerText=j.translated;
+ }catch(e){ res.innerText='Error: '+e.message; }
 }
 </script>
 </body>
