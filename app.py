@@ -1,39 +1,35 @@
 from flask import Flask, render_template, request, jsonify
-from googletrans import Translator
+import requests
 
 app = Flask(__name__)
-translator = Translator()
+
+OFFLINE = {
+    'how are you': {'sw':'Habari yako?','ar':'كيف حالك؟','de':'Wie geht es dir?','fr':'Comment ça va?','en':'How are you'},
+    'how are you?': {'sw':'Habari yako?','ar':'كيف حالك؟','de':'Wie geht es dir?'},
+    'welcome': {'sw':'Karibu','ar':'أهلاً وسهلاً','de':'Willkommen','fr':'Bienvenue'},
+    'thank you': {'sw':'Asante','ar':'شكرا لك','de':'Danke','fr':'Merci'},
+    'you': {'sw':'wewe','ar':'أنت','de':'Du','fr':'toi'},
+}
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
 @app.route('/translate', methods=['POST'])
-def do_translate():
-    data = request.get_json()
-    text = data.get('text','').strip()
-    to_raw = data.get('to','sw').lower()
-
-    # convert German/Kiswahili/Arabic -> de/sw/ar
-    lang_map = {
-        'kiswahili':'sw', 'sw':'sw',
-        'arabic':'ar', 'ar':'ar',
-        'german':'de', 'de':'de', 'germen':'de',
-        'english':'en', 'en':'en',
-        'french':'fr', 'fr':'fr',
-        'spanish':'es', 'es':'es'
-    }
-    to_lang = lang_map.get(to_raw, 'sw')
-
-    if not text:
+def trans():
+    data = request.get_json() or {}
+    txt = data.get('text','').strip()
+    to = data.get('to','sw').lower()[:2]
+    if not txt:
         return jsonify({'translated':''})
-
+    low = txt.lower()
+    if low in OFFLINE and to in OFFLINE[low]:
+        return jsonify({'translated': OFFLINE[low][to]})
     try:
-        result = translator.translate(text, dest=to_lang)
-        return jsonify({'translated': result.text})
-    except Exception as e:
-        print("Translate error:", e)
-        return jsonify({'translated': text})
-
-if __name__ == '__main__':
-    app.run()
+        r = requests.get(f"https://api.mymemory.translated.net/get?q={txt}&langpair=en|{to}", timeout=7).json()
+        t = r.get('responseData',{}).get('translatedText','')
+        if t and 'MYMEMORY' not in t and 'LIMIT' not in t:
+            return jsonify({'translated': t})
+    except:
+        pass
+    return jsonify({'translated': OFFLINE.get(low,{}).get(to, txt)})
