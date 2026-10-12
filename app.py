@@ -3,33 +3,43 @@ import requests
 
 app = Flask(__name__)
 
-OFFLINE = {
-    'how are you': {'sw':'Habari yako?','ar':'كيف حالك؟','de':'Wie geht es dir?','fr':'Comment ça va?','en':'How are you'},
-    'how are you?': {'sw':'Habari yako?','ar':'كيف حالك؟','de':'Wie geht es dir?'},
-    'welcome': {'sw':'Karibu','ar':'أهلاً وسهلاً','de':'Willkommen','fr':'Bienvenue'},
-    'thank you': {'sw':'Asante','ar':'شكرا لك','de':'Danke','fr':'Merci'},
-    'you': {'sw':'wewe','ar':'أنت','de':'Du','fr':'toi'},
-}
-
 @app.route('/')
 def home():
     return render_template('index.html')
 
 @app.route('/translate', methods=['POST'])
-def trans():
-    data = request.get_json() or {}
-    txt = data.get('text','').strip()
-    to = data.get('to','sw').lower()[:2]
-    if not txt:
+def translate():
+    data = request.get_json()
+    text = data.get('text','').strip()
+    to = data.get('to','sw').lower()
+    
+    if not text:
         return jsonify({'translated':''})
-    low = txt.lower()
-    if low in OFFLINE and to in OFFLINE[low]:
-        return jsonify({'translated': OFFLINE[low][to]})
+
+    # 1. LIBRE - Hii ndio inatranslate ANY LANGUAGE, sio moja
     try:
-        r = requests.get(f"https://api.mymemory.translated.net/get?q={txt}&langpair=en|{to}", timeout=7).json()
-        t = r.get('responseData',{}).get('translatedText','')
-        if t and 'MYMEMORY' not in t and 'LIMIT' not in t:
-            return jsonify({'translated': t})
+        # Hii API ni free, haina limit kama Google
+        res = requests.post(
+            "https://translate.argosopentech.com/translate",
+            json={"q": text, "source": "auto", "target": to, "format": "text"},
+            timeout=15
+        ).json()
+        if res.get('translatedText'):
+            return jsonify({'translated': res['translatedText']})
+    except Exception as e:
+        print("Libre failed:", e)
+
+    # 2. MyMemory kama backup ya any language
+    try:
+        from urllib.parse import quote
+        r = requests.get(f"https://api.mymemory.translated.net/get?q={quote(text)}&langpair=auto|{to}", timeout=10).json()
+        tr = r.get('responseData',{}).get('translatedText','')
+        if tr:
+            return jsonify({'translated': tr})
     except:
         pass
-    return jsonify({'translated': OFFLINE.get(low,{}).get(to, txt)})
+
+    return jsonify({'translated': text + " (translation failed)"})
+
+if __name__ == '__main__':
+    app.run()
